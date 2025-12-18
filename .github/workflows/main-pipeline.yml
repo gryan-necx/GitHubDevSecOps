@@ -1,12 +1,11 @@
 name: 00 - Main CI / CD Pipeline
 
-on: 
-  push: 
-    branches: [ "main" ]
-    paths-ignore: 
+on:
+  push:
+    paths-ignore:
       - '**/*.md'
       - '**/*.txt'
-  workflow_dispatch: 
+  workflow_dispatch:
 
   jobs: 
     build: 
