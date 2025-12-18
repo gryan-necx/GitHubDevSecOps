@@ -19,3 +19,10 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
 #Checking FINAL
+
+#IMPLEMENTING Software Composition Analysis (SCA)
+  sca:
+    needs: build
+    name: SCA
+    uses: ./.github/workflows/sca.yml
+    secrets: inherit
