@@ -12,6 +12,7 @@ permissions:
   checks: write
   pull-requests: write
   issues: read
+  security-events: write
 
 jobs:
   build:
