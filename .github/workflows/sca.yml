@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   sca:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: SCA - Java Project
 
     steps:
@@ -53,3 +53,4 @@ jobs:
 
       - name: Print artifact name
         run: echo "${{ steps.scan.outputs.artifact_name }}"
+
