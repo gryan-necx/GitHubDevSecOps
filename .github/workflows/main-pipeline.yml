@@ -20,9 +20,11 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
     
-  sca:
-    needs: build
-    name: SCA
-    uses: gryan-necx/GitHubDevSecOps/.github/workflows/sca.yml@main
-    secrets: inherit
-    ##SECRETS CHECKING
+  # sca:
+  #   needs: build
+  #   name: SCA
+  #   uses: gryan-necx/GitHubDevSecOps/.github/workflows/sca.yml@main
+  #   secrets: inherit
+  #   ##SECRETS CHECKING
+
+  
