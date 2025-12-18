@@ -23,6 +23,6 @@ jobs:
   sca:
     needs: build
     name: SCA
-    uses: ./.github/workflows/sca.yml
+    uses: gryan-necx/GitHubDevSecOps/.github/workflows/sca.yml@main
     secrets: inherit
     ##SECRETS CHECKING
