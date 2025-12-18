@@ -1,4 +1,4 @@
-namme:  10 Build Pipeline
+name:  10 Build Pipeline
 
 on: 
   workflow_dispatch:
