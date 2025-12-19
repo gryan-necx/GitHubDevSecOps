@@ -103,7 +103,9 @@ semgrep:
         
     container:
         image: returntocorp/semgrep:latest
+    
     if: (github.actor != 'dependabot[bot]')
+    
     steps:
         - uses: actions/checkout@v4
  
