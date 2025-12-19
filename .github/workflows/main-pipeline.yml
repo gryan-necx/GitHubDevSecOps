@@ -1,3 +1,40 @@
+# name: 00 - Main CI / CD Pipeline
+
+# on:
+#   push:
+#     paths-ignore:
+#       - '**/*.md'
+#       - '**/*.txt'
+#   workflow_dispatch:
+
+# permissions:
+#   contents: read
+#   checks: write
+#   pull-requests: write
+#   issues: read
+#   security-events: write
+
+# jobs:
+#   build:
+#     name: Build
+#     uses: ./.github/workflows/build.yml
+#     secrets: inherit
+
+#   license-compliance:
+#     needs: build
+#     name: License compliance
+#     uses: ./.github/workflows/license-compliance.yml
+#     secrets: inherit
+    
+#   #sca:
+#   #   needs: build
+#   #   name: SCA
+#   #   uses: gryan-necx/GitHubDevSecOps/.github/workflows/sca.yml@main
+#   #   secrets: inherit
+#   #   ##SECRETS CHECKING
+
+
+
 name: 00 - Main CI / CD Pipeline
 
 on:
@@ -7,30 +44,47 @@ on:
       - '**/*.txt'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  checks: write
-  pull-requests: write
-  issues: read
-  security-events: write
-
 jobs:
   build:
     name: Build
     uses: ./.github/workflows/build.yml
     secrets: inherit
 
-  license-compliance:
-    needs: build
-    name: License compliance
-    uses: ./.github/workflows/license-compliance.yml
-    secrets: inherit
-    
-  #sca:
+  # sca:
   #   needs: build
   #   name: SCA
-  #   uses: gryan-necx/GitHubDevSecOps/.github/workflows/sca.yml@main
+  #   uses: ./.github/workflows/sca.yml
   #   secrets: inherit
-  #   ##SECRETS CHECKING
 
-  
+  sast:
+    needs: build
+    name: SAST
+    uses: ./.github/workflows/sast.yml
+    secrets: inherit
+
+  # license-compliance:
+  #   needs: build
+  #   name: License compliance
+  #   uses: ./.github/workflows/license-compliance.yml
+  #   secrets: inherit
+
+  # docker:
+  #   needs: build
+  #   name: Build docker image
+  #   uses: ./.github/workflows/docker.yml
+  #   secrets: inherit
+
+  # container-image-scan:
+  #   needs: docker
+  #   name: Container image scan
+  #   uses: ./.github/workflows/container-image-scan.yml
+  #   secrets: inherit
+  #   with:
+  #     image-tag: ${{ needs.docker.outputs['image-tag'] }}
+
+  # dast:
+  #   needs: [build, docker]
+  #   name: DAST Scan
+  #   uses: ./.github/workflows/dast.yml
+  #   secrets    secrets: inherit
+  #   with:
