@@ -15,26 +15,12 @@ permissions:
 
 jobs:
   build:
-    name: Build
+    name: BUILD
     uses: ./.github/workflows/build.yml
     secrets: inherit
 
-    sast:
-      needs: build
-      name: SAST
-      uses: ./.github/workflows/sast.yml
-      secrets: inherit
-
-
-    
-  # sca:
-  #   needs: build
-  #   name: SCA
-  #   uses: ./.github/workflows/sca.yml
-  #   secrets: inherit
-
-  # sast:
-  #   needs: build
-  #   name: SAST
-  #   uses: ./.github/workflows/sast.yml
-  #   secrets: inherit
+  sast:
+    name: SAST
+    needs: build
+    uses: ./.github/workflows/sast.yml
+    secrets: inherit
