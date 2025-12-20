@@ -15,6 +15,7 @@ permissions:
   issues: read
   actions: read
   security-events: write
+  packages: write
 
 jobs:
   build:
