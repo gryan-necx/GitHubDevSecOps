@@ -28,4 +28,9 @@ jobs:
     uses: ./.github/workflows/sast.yml
     secrets: inherit
 
-  
+  semgrep:
+    name: SEMGREP
+    needs: build
+    uses: ./.github/workflows/semgrep.yml
+    secrets: inherit
+
