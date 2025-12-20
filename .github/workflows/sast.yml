@@ -43,7 +43,7 @@ jobs:
           path: ${{ github.workspace }}/target
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
 
@@ -78,38 +78,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2.1.28
         with:
           sarif_file: ${{ github.workspace }}/results.sarif
-
-  # semgrep:
-  #   name: SAST Semgrep
-  #   needs: [SAST-CodeQL]
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     security-events: write
-  #   container:
-  #     image: returntocorp/semgrep:latest
-  #   if: (github.actor != 'dependabot[bot]')
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Run Semgrep
-  #       continue-on-error: false        # set true if you want to ignore findings
-  #       run: |
-  #         semgrep ci -v --sarif -o results.sarif
-  #       env:
-  #         SEMGREP_RULES: "p/default p/security-audit p/r2c-security-audit p/cwe-top-25 p/owasp-top-ten"
-
-  #     - name: Upload Semgrep Report
-  #       if: always()
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: semgrep.sarif
-  #         path: ${{ github.workspace }}/results.sarif
-
-  #     - name: Upload analysis results to GitHub Security tab
-  #       if: always()
-  #       uses: github/codeql-action/upload-sarif@v2.1.28
-  #       with:
-  #         sarif_file: ${{ github.workspace }}/results.sarif
