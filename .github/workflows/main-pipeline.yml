@@ -1,4 +1,3 @@
-# .github/workflows/main-pipeline.yml
 name: 00 - Main CI / CD Pipeline
 
 on:
@@ -15,7 +14,6 @@ permissions:
   issues: read
   actions: read
   security-events: write
-  packages: write
 
 jobs:
   build:
@@ -25,25 +23,25 @@ jobs:
 
   sast:
     name: SAST
-    needs: build
+    needs: build  # Runs after Build
     uses: ./.github/workflows/sast.yml
     secrets: inherit
 
   semgrep:
     name: SEMGREP
-    needs: build
+    needs: sast   # Runs after SAST
     uses: ./.github/workflows/semgrep.yml
     secrets: inherit
 
   docker:
-    needs: build
     name: Build docker image
+    needs: semgrep # Runs after Semgrep
     uses: ./.github/workflows/docker.yml
     secrets: inherit
 
   container-image-scan:
-    needs: docker
-    name: Build docker image
+    name: Scan docker image
+    needs: docker  # Runs after Docker
     uses: ./.github/workflows/container-image-scan.yml
     secrets: inherit
     with:

@@ -59,6 +59,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --- MISSING STEP ADDED BELOW ---
+      - name: Download compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: target
+          path: target
+      # --------------------------------
+
       - name: Run SpotBugs action
         uses: jmservera/spotbugs-github-action@v0.1.0-alpha
         with:

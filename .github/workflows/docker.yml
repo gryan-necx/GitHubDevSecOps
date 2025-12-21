@@ -1,12 +1,11 @@
-# .github/workflows/docker.yml
 name: 50 Build docker image
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
   workflow_call:
     outputs:
       image-tag:
-        description: 'The image tag(s) of the new docker image (comma separated)'
+        description: 'The image tag of the new docker image'
         value: ${{ jobs.docker.outputs.image-tag }}
 
 env:
@@ -15,57 +14,50 @@ env:
 
 jobs:
   docker:
-    name: Build and publish Docker image
+    outputs:
+      # Change this to use the specifically extracted single tag
+      image-tag: ${{ steps.meta.outputs.version }} 
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+    
+    # Updated to v4 to match build.yml upload version
+    - name: Download application binary
+      uses: actions/download-artifact@v4 
+      with:
+        name: Application-Binary
+        path: target
 
-      - name: Download application binary
-        uses: actions/download-artifact@v4
-        with:
-          name: Application-Binary
-          path: target
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2.1.0
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4.1.0
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        # We add raw types to ensure we have a clean single tag to output
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=ref,event=branch
+          type=sha,format=long
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # Ensure scheduled runs use main as tag label (default is nightly)
-          # EVENT=BRANCH and SCHEDULE MUST BE LAST to work correctly
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=ref,event=pr
-            type=ref,event=tag
-            type=ref,event=branch
-            type=schedule,pattern=main
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v3.2.0
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build and push Docker image
-        id: build
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # optional: enable multi-platform builds if needed
-          # platforms: linux/amd64,linux/arm64
 
-      - name: Output image tag(s)
-        run: |
-          echo "image-tag=${{ steps.meta.outputs.tags }}" >> $GITHUB_OUTPUT
+        #GEMINI
+        
