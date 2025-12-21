@@ -15,7 +15,8 @@ on:
         required: true
 env:
   REGISTRY: ghcr.io
-  IMAGE_TAG: ${{ inputs.image-tag || github.event.inputs.image-tag }}
+  # Change the line below to include the registry and image name
+  IMAGE_FULL_NAME: ghcr.io/${{ github.repository }}:${{ inputs.image-tag || github.event.inputs.image-tag }}
 
 jobs:
   container-image-scan:
@@ -28,11 +29,15 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: docker pull ${{ env.IMAGE_TAG }}
+
+      # Update this line to use the new FULL name variable
+      - run: docker pull ${{ env.IMAGE_FULL_NAME }}
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.7.1
         with:
-          image-ref: ${{ env.IMAGE_TAG }}
+          # Update this line as well
+          image-ref: ${{ env.IMAGE_FULL_NAME }}
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
