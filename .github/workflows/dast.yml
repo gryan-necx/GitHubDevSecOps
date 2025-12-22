@@ -35,44 +35,43 @@ jobs:
 
       - name: Start Docker Container
         run: |
-          # Force the repository name to lowercase for Docker compatibility
+          # 1. Construct the correct lowercase image name
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          # Clean the image tag (it can sometimes contain multiple tags from metadata-action)
+          
+          # 2. Extract the clean tag (handle multiple tags if passed)
           CLEAN_TAG=$(echo "${{ inputs.image-tag }}" | cut -d',' -f1)
           
-          FULL_IMAGE_NAME="${{ env.REGISTRY }}/${REPO_LOWER}:${CLEAN_TAG}"
+          FULL_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}:${CLEAN_TAG}"
           
-          echo "Pulling and starting: $FULL_IMAGE_NAME"
-          docker pull $FULL_IMAGE_NAME
-          docker run -d -p 8080:8080 --name demoApp $FULL_IMAGE_NAME
+          echo "Pulling and starting: $FULL_IMAGE"
+          docker pull $FULL_IMAGE
+          docker run -d -p 8080:8080 --name demoApp $FULL_IMAGE
 
       - name: wait for container to start
         run: timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080)" != "200" ]]; do sleep 5; done' || false
 
-      - name: test container
-        run: curl -s localhost:8080/echo?msg=Hello%20World!
-     
       - name: Run ZAP OWASP full scan
         uses: zaproxy/action-full-scan@v0.4.0
         with:
-          docker_name: 'owasp/zap2docker-stable'
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8080'
-          cmd_options: '-a -j -l WARN -z "-addoninstallall" '
+          cmd_options: '-a -j -l WARN'
           allow_issue_writing: true
 
       - name: Upload html report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: DAST_Report.html
+          name: DAST_Report
           path: report_html.html
 
       - name: stop docker
         if: always()
         run: |
-          docker stop demoApp && docker rm demoApp && docker container prune --force && docker image prune --force
-
-
+          # Use "|| true" to ensure the job doesn't fail if the container isn't running
+          docker stop demoApp || true
+          docker rm demoApp || true
+          docker container prune --force
+          docker image prune --force
 
           

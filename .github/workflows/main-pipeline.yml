@@ -24,25 +24,25 @@ jobs:
 
   sast:
     name: SAST
-    needs: build  # Runs after Build
+    needs: build
     uses: ./.github/workflows/sast.yml
     secrets: inherit
 
   semgrep:
     name: SEMGREP
-    needs: sast   # Runs after SAST
+    needs: sast
     uses: ./.github/workflows/semgrep.yml
     secrets: inherit
 
   docker:
     name: Build docker image
-    needs: semgrep # Runs after Semgrep
+    needs: semgrep
     uses: ./.github/workflows/docker.yml
     secrets: inherit
 
   container-image-scan:
     name: Scan docker image
-    needs: docker  # Runs after Docker
+    needs: docker
     uses: ./.github/workflows/container-image-scan.yml
     secrets: inherit
     with:
@@ -55,6 +55,5 @@ jobs:
     secrets: inherit
     with:
       image-tag: ${{ needs.docker.outputs.image-tag }}
- 
 
-  ### GEN FINAL TILL DAST ##
+      
