@@ -1,0 +1,74 @@
+name: 50 DAST Scan Docker Image
+on:
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        type: string
+        description: 'The name of the docker image to scan'
+        required: true
+  workflow_call:
+    inputs:
+      image-tag:
+        type: string
+        description: 'The name of the docker image to scan'
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  dast-scan:
+    name: DAST Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      issues: write
+      actions: read
+    steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start Docker Container
+        run: |
+          # Force the repository name to lowercase for Docker compatibility
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          # Clean the image tag (it can sometimes contain multiple tags from metadata-action)
+          CLEAN_TAG=$(echo "${{ inputs.image-tag }}" | cut -d',' -f1)
+          
+          FULL_IMAGE_NAME="${{ env.REGISTRY }}/${REPO_LOWER}:${CLEAN_TAG}"
+          
+          echo "Pulling and starting: $FULL_IMAGE_NAME"
+          docker pull $FULL_IMAGE_NAME
+          docker run -d -p 8080:8080 --name demoApp $FULL_IMAGE_NAME
+
+      - name: wait for container to start
+        run: timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080)" != "200" ]]; do sleep 5; done' || false
+
+      - name: test container
+        run: curl -s localhost:8080/echo?msg=Hello%20World!
+     
+      - name: Run ZAP OWASP full scan
+        uses: zaproxy/action-full-scan@v0.4.0
+        with:
+          docker_name: 'owasp/zap2docker-stable'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:8080'
+          cmd_options: '-a -j -l WARN -z "-addoninstallall" '
+          allow_issue_writing: true
+
+      - name: Upload html report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: DAST_Report.html
+          path: report_html.html
+
+      - name: stop docker
+        if: always()
+        run: |
+          docker stop demoApp && docker rm demoApp && docker container prune --force && docker image prune --force
