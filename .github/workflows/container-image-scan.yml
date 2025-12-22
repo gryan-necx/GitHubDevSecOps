@@ -38,7 +38,7 @@ jobs:
           docker pull ghcr.io/${REPO_LOWER}:${{ inputs.image-tag || github.event.inputs.image-tag }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.7.1
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           # Use the lowercase conversion for image-ref as well
           image-ref: ghcr.io/${{ github.repository_owner }}/githubdevsecops:${{ inputs.image-tag || github.event.inputs.image-tag }}
