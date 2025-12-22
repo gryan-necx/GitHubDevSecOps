@@ -50,8 +50,9 @@ jobs:
 
   dast:
     name: DAST Scan
-    needs: container-image-scan
+    needs: [docker, container-image-scan] # Needs both to get output and ensure safety
     uses: ./.github/workflows/dast.yml
     secrets: inherit
     with:
+      # This line is the most important:
       image-tag: ${{ needs.docker.outputs.image-tag }}

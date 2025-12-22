@@ -7,11 +7,9 @@ on:
         description: 'The name of the docker image to scan'
         required: true
   workflow_call:
-    inputs:
+    outputs:
       image-tag:
-        type: string
-        description: 'The name of the docker image to scan'
-        required: true
+        value: ${{ jobs.docker.outputs.image-tag }}
 
 env:
   REGISTRY: ghcr.io
@@ -25,6 +23,8 @@ jobs:
       security-events: write
       issues: write
       actions: read
+
+    
     steps:
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
@@ -33,19 +33,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      
+
       - name: Start Docker Container
         run: |
-          # 1. Construct the correct lowercase image name
+          # 1. Force lowercase repository name
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
-          # 2. Extract the clean tag (handle multiple tags if passed)
+          # 2. Extract ONLY the first tag if multiple are provided
+          # This prevents the "invalid reference format" error
           CLEAN_TAG=$(echo "${{ inputs.image-tag }}" | cut -d',' -f1)
           
-          FULL_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}:${CLEAN_TAG}"
+          # 3. Handle empty tag fallback (optional but recommended)
+          if [ -z "$CLEAN_TAG" ]; then CLEAN_TAG="main"; fi
+
+          FULL_IMAGE="ghcr.io/${REPO_LOWER}:${CLEAN_TAG}"
           
-          echo "Pulling and starting: $FULL_IMAGE"
+          echo "Starting DAST scan on: $FULL_IMAGE"
           docker pull $FULL_IMAGE
           docker run -d -p 8080:8080 --name demoApp $FULL_IMAGE
+
+          docker:
+            outputs:
+              image-tag: ${{ steps.meta.outputs.version }} # or tags
 
       - name: wait for container to start
         run: timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080)" != "200" ]]; do sleep 5; done' || false
@@ -64,6 +74,7 @@ jobs:
         with:
           name: DAST_Report
           path: report_html.html
+        
 
       - name: stop docker
         if: always()
