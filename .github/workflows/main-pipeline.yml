@@ -55,5 +55,4 @@ jobs:
     secrets: inherit
     with:
       image-tag: ${{ needs.docker.outputs.image-tag }}
-
       
