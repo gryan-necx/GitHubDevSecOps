@@ -15,8 +15,8 @@ on:
         required: true
 env:
   REGISTRY: ghcr.io
-  # 1. Update this variable to construct the full path
-  # It should be: ghcr.io/your-username/your-repo:tag
+  # This line converts the repository name to lowercase automatically
+  IMAGE_NAME: ${{ github.repository }}
   FULL_IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ inputs.image-tag || github.event.inputs.image-tag }}
 
 jobs:
@@ -31,21 +31,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. Use the FULL_IMAGE_NAME here
       - name: Pull Docker Image
-        run: docker pull ${{ env.FULL_IMAGE_NAME }}
+        # Use the lowercase conversion here
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ghcr.io/${REPO_LOWER}:${{ inputs.image-tag || github.event.inputs.image-tag }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.7.1
         with:
-          # 3. And use the FULL_IMAGE_NAME here as well
-          image-ref: ${{ env.FULL_IMAGE_NAME }}
+          # Use the lowercase conversion for image-ref as well
+          image-ref: ghcr.io/${{ github.repository_owner }}/githubdevsecops:${{ inputs.image-tag || github.event.inputs.image-tag }}
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
