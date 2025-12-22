@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   checks: write
   pull-requests: write
-  issues: read
+  issues: write
   actions: read
   security-events: write
   packages: write

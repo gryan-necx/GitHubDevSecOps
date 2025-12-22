@@ -72,3 +72,7 @@ jobs:
         if: always()
         run: |
           docker stop demoApp && docker rm demoApp && docker container prune --force && docker image prune --force
+
+
+
+          
